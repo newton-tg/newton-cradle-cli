@@ -115,9 +115,7 @@ const describeUser = async (pool: OpenedContract<PoolV1>, poolParams: PoolParams
     try {
         const jettonWallet0 = client.open(JettonWallet.create(await client.open(JettonMinter.create(poolParams.token0)).getWalletAddress(userAddress)));
         jettonWallet0Balance = parseJettons((await jettonWallet0.getWalletData()).balance, poolParams.decimals0);
-      // }
     } catch (e) {
-      console.log("error", e);
       jettonWallet0Balance = 0;
     }
     console.log(`You have ${jettonWallet0Balance} ${formatToken(poolParams.token0)}`);
