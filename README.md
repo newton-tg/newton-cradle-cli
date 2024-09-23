@@ -10,7 +10,7 @@ pnpm i
 
 ## Requirements
 
-You need a A v4 testnet TON wallet. You also need a toncenter testnet api key (https://toncenter.com/).
+You need a A v4 testnet TON wallet with TON tokens. You also need a toncenter testnet api key (https://toncenter.com/).
 
 ## Usage
 
