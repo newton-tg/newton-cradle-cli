@@ -1,5 +1,5 @@
 {
-  "name": "@ston-fi/sdk",
+  "name": "@newton-cradle/cli",
   "version": "2.0.0-rc.5",
   "description": "Typescript SDK to interact with the Ston.fi DEX",
   "license": "MIT",
@@ -7,19 +7,9 @@
   "packageManager": "pnpm@9.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ston-fi/sdk.git"
+    "url": "git+https://github.com/newton-tg/newton-cradle-cli.git"
   },
-  "homepage": "https://github.com/ston-fi/sdk#readme",
-  "contributors": [
-    {
-      "name": "Marsianin22",
-      "url": "https://github.com/marsianin22"
-    },
-    {
-      "name": "Pavel Rakhmanov",
-      "url": "https://github.com/pavel-rakhmanov"
-    }
-  ],
+  "homepage": "https://github.com/newton-tg/newton-cradle-cli#readme",
   "files": [
     "dist",
     "package.json",
@@ -93,5 +83,8 @@
     "vite": "^4.5.5",
     "vite-plugin-dts": "1.7.1",
     "vitest": "0.25.6"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
   }
 }

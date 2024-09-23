@@ -14,35 +14,49 @@ import { d, l } from "vitest/dist/index-81973d31";
 import { parse } from "path";
 import { PtonV1 } from "./contracts/pTON/v1/PtonV1";
 import { PtonV2_1 } from "./contracts/pTON/v2_1/PtonV2_1";
+
+import dotenv from "dotenv";
+dotenv.config();
+
+const deployConfigEnv = ".env";
+let myMnemonic;
+let apiKey;
+if (!process.env.MY_MNEMONIC) {
+  console.log(` - ERROR: No MY_MNEMONIC env variable found, please add it to env`);
+  process.exit(1);
+} else {
+  myMnemonic = process.env.MY_MNEMONIC;
+}
+
+if (myMnemonic === undefined) {
+  console.log(` - ERROR: No MY_MNEMONIC env variable found, please add it to env`);
+  process.exit(1);
+}
+
+if (!process.env.API_KEY) {
+  console.log(` - ERROR: No API_KEY env variable found, please add it to env`);
+  process.exit(1);
+} else {
+  apiKey = process.env.API_KEY;
+}
+
 const client = new TonClient({
   endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-  apiKey: "c01ce5368fe2e352ce698e7a3bebd09582f0cdf8e309cf8dea736a6e121d7e93"
+  apiKey
 });
 
-// const client = new TonClient({
-//     endpoint: "https://toncenter.com/api/v2/jsonRPC",
-//   });
 
-// const routerAddress = "EQCnlVfSrYe2Q-m__wTsNezeSesZ6Jw-iN1dYfuuuindJXwf";
 const routerAddress = "EQAsxiBVZ5ys4KVMwbOtWDij8cjhflAOoti52oyBnW8mbtk0";
 
-const myAddress = "0QAMUjN7e1W787PAnTLiV5Y7O-9qOp0Rf0g9Vw1tlU4Mw0RZ";
-
-
-// const JETTON0 = "EQAWWa8d2_vsIZ4CHA6TRiyWOmwMRIsA_CarQmSlgLi528OI";
 const JETTON1 = "EQAe6ZRu9D7zhSyxoHpG_E7I0ihpqtsACknv17nHCICmD4Xm";
 
 const router = client.open(new DEX.v1.Router(routerAddress));
-// const router = client.open(new DEX.v1.Router());
 
 const workchain = 0;
 
 
 const newQueryId = async (wallet: OpenedContract<WalletContractV4>): Promise<number> => {
   return 12345;
-  // const seqno = await wallet.getSeqno();
-  // // console.log("seqno", seqno);
-  // return seqno;
 }
 
 interface PoolParams {
@@ -231,7 +245,7 @@ const handleWithdrawLiquidity = async (pool: OpenedContract<PoolV1>, poolParams:
     }
     const txParams = await pool.getBurnTxParams({
         amount: lpToBurn,
-        responseAddress: myAddress,
+        responseAddress: contract.address,
         queryId: await newQueryId(contract),
       });
     await contract.sendTransfer({
@@ -287,7 +301,7 @@ const handleSwap = async (keyPair: KeyPair, contract: OpenedContract<WalletContr
     const amountIn = formatJettons(Number(amountInAnswer), decimalsIn);
 
     const swapTxParams = await router.getSwapJettonToJettonTxParams({
-        userWalletAddress: myAddress,
+        userWalletAddress: contract.address,
         offerJettonAddress: tokenOut,
         offerAmount: amountOut,
         askJettonAddress: tokenIn,
@@ -304,8 +318,7 @@ const handleSwap = async (keyPair: KeyPair, contract: OpenedContract<WalletContr
 }
 
 const run = async () => {
-    const mnemonics = "such alley define begin equal amount intact venue scan accuse inquiry zebra daughter satisfy cluster trust gas choice age regret chat hundred hat wink".split(" ");
-    const keyPair = await mnemonicToPrivateKey(mnemonics);
+    const keyPair = await mnemonicToPrivateKey(myMnemonic.split(' '));
 
     const wallet = WalletContractV4.create({
         workchain,
@@ -392,7 +405,7 @@ const run = async () => {
     }));
 
     let poolExists = true;
-    const userBalance = await describeUser(pool, poolParams, myAddress, contract);
+    const userBalance = await describeUser(pool, poolParams, contract.address, contract);
     try {
       await describePool(pool, poolParams);
     } catch (e) {
@@ -403,7 +416,7 @@ const run = async () => {
     const action = await rl.question('Provide liquidity (0), swap tokens (1), withdraw liquidity (2), or exit (3)? ');
     switch (action) {
       case '0':
-        await handleProvideLiquidity(keyPair, contract, poolParams, myAddress, userBalance, poolExists);
+        await handleProvideLiquidity(keyPair, contract, poolParams, contract.address, userBalance, poolExists);
         break;
       case '1':
         if (!poolExists) {
