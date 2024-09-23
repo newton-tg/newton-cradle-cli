@@ -266,12 +266,6 @@ export class RouterV1 extends Contract {
     const askJettonWalletAddress = await provider
       .open(JettonMinter.create(params.askJettonAddress))
       .getWalletAddress(this.address);
-    console.log(askJettonWalletAddress);
-
-    const tmp = await provider
-    .open(JettonMinter.create(params.askJettonAddress))
-    .getWalletAddress(params.userWalletAddress);
-  console.log(tmp);
 
     const forwardPayload = await this.createSwapBody({
       userWalletAddress: params.userWalletAddress,

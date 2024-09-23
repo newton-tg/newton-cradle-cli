@@ -287,7 +287,6 @@ const handleSwap = async (keyPair: KeyPair, contract: OpenedContract<WalletContr
         console.log('Invalid input');
         return;
     }
-
     const amountOutAnswer = await rl.question(
       `How many ${tokenOutName} do you want to swap? `);
     if (isNaN(Number(amountOutAnswer))) {
@@ -295,8 +294,6 @@ const handleSwap = async (keyPair: KeyPair, contract: OpenedContract<WalletContr
       return;
     }
     const amountOut = formatJettons(Number(amountOutAnswer), decimalsOut);
-
-
     const amountInAnswer = await rl.question(
       `How many ${tokenInName} do you want to receive? `);
     if (isNaN(Number(amountInAnswer))) {
@@ -305,15 +302,39 @@ const handleSwap = async (keyPair: KeyPair, contract: OpenedContract<WalletContr
     }
     const amountIn = formatJettons(Number(amountInAnswer), decimalsIn);
 
-    const swapTxParams = await router.getSwapJettonToJettonTxParams({
+    let swapTxParams;
+
+    if (tokenOut == PtonV1.address) {
+      swapTxParams = await router.getSwapTonToJettonTxParams({
         userWalletAddress: contract.address,
-        offerJettonAddress: tokenOut,
+        proxyTon: new pTON.v1(),
         offerAmount: amountOut,
         askJettonAddress: tokenIn,
         minAskAmount: amountIn,
         ampCoeff: poolParams.ampCoeff,
         queryId: await newQueryId(contract),
       });
+    } else if (tokenIn == PtonV1.address) {
+      swapTxParams = await router.getSwapJettonToTonTxParams({
+        userWalletAddress: contract.address,
+        proxyTon: new pTON.v1(),
+        offerJettonAddress: tokenOut,
+        offerAmount: amountOut,
+        minAskAmount: amountIn,
+        ampCoeff: poolParams.ampCoeff,
+        queryId: await newQueryId(contract),
+      });
+    } else {
+      swapTxParams = await router.getSwapJettonToJettonTxParams({
+          userWalletAddress: contract.address,
+          offerJettonAddress: tokenOut,
+          offerAmount: amountOut,
+          askJettonAddress: tokenIn,
+          minAskAmount: amountIn,
+          ampCoeff: poolParams.ampCoeff,
+          queryId: await newQueryId(contract),
+      });
+    }
 
     await contract.sendTransfer({
     seqno: await contract.getSeqno(),
