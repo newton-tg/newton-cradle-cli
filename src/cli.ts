@@ -99,7 +99,6 @@ const describePool = async (poolAddress: OpenedContract<PoolV1>, poolParams: Poo
     const reserve1 = parseJettons(poolData.reserve1, poolParams.decimals1);
     const description = `${poolType} has reserves of (${reserve0} ${jettonMaster0} and ${reserve1} ${jettonMaster1})`;
     console.log(description);
-    console.log("poolData", poolData);
 }
 
 const describeUser = async (pool: OpenedContract<PoolV1>, poolParams: PoolParams, userAddress: AddressType, wallet: OpenedContract<WalletContractV4>): Promise<{token0: number, token1: number, lp: bigint, ton: number}> => {
