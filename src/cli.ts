@@ -81,7 +81,7 @@ const parseJettons = (jettons: bigint, decimals: number): number => {
 }
 
 const formatToken = (address: AddressType): AddressType => {
-  if (address == PtonV1.address) {
+  if (address.toString() == PtonV1.address.toString()) {
     return "TON";
   }
   return address;
@@ -97,7 +97,7 @@ const describePool = async (poolAddress: OpenedContract<PoolV1>, poolParams: Poo
 
     const reserve0 = parseJettons(poolData.reserve0, poolParams.decimals0);
     const reserve1 = parseJettons(poolData.reserve1, poolParams.decimals1);
-    const description = `${poolType} has reserves of (${reserve0} ${jettonMaster0} and ${reserve1} ${jettonMaster1})`;
+    const description = `${poolType} has reserves of ${reserve0} ${formatToken(jettonMaster0)} and ${reserve1} ${formatToken(jettonMaster1)}`;
     console.log(description);
 }
 
@@ -110,23 +110,31 @@ const describeUser = async (pool: OpenedContract<PoolV1>, poolParams: PoolParams
     }
     const tonBalance = parseJettons(await wallet.getBalance(), 9);
     console.log(`You have ${tonBalance} TON`);
-    let jettonWallet0Balance;
-    try {
-        const jettonWallet0 = client.open(JettonWallet.create(await client.open(JettonMinter.create(poolParams.token0)).getWalletAddress(userAddress)));
-        jettonWallet0Balance = parseJettons((await jettonWallet0.getWalletData()).balance, poolParams.decimals0);
-    } catch (e) {
-      jettonWallet0Balance = 0;
-    }
-    console.log(`You have ${jettonWallet0Balance} ${formatToken(poolParams.token0)}`);
 
-    let jettonWallet1Balance;
-    try {
-        const jettonWallet1 = client.open(JettonWallet.create(await client.open(JettonMinter.create(poolParams.token1)).getWalletAddress(userAddress)));
-        jettonWallet1Balance = parseJettons((await jettonWallet1.getWalletData()).balance, poolParams.decimals1);
-    } catch (e) {
-      jettonWallet1Balance = 0;
+    let jettonWallet0Balance = 0;
+    if (poolParams.token0 != PtonV1.address) {
+      try {
+          const jettonWallet0 = client.open(JettonWallet.create(await client.open(JettonMinter.create(poolParams.token0)).getWalletAddress(userAddress)));
+          jettonWallet0Balance = parseJettons((await jettonWallet0.getWalletData()).balance, poolParams.decimals0);
+      } catch (e) {
+        jettonWallet0Balance = 0;
+      }
+      console.log(`You have ${jettonWallet0Balance} ${formatToken(poolParams.token0)}`);
+    } else {
+      jettonWallet0Balance = tonBalance;
     }
-    console.log(`You have ${jettonWallet1Balance} ${formatToken(poolParams.token1)}`);
+    let jettonWallet1Balance = 0;
+    if (poolParams.token1 != PtonV1.address) {
+      try {
+          const jettonWallet1 = client.open(JettonWallet.create(await client.open(JettonMinter.create(poolParams.token1)).getWalletAddress(userAddress)));
+          jettonWallet1Balance = parseJettons((await jettonWallet1.getWalletData()).balance, poolParams.decimals1);
+      } catch (e) {
+        jettonWallet1Balance = 0;
+      }
+      console.log(`You have ${jettonWallet1Balance} ${formatToken(poolParams.token1)}`);
+    } else {
+      jettonWallet1Balance = tonBalance;
+    }
     let lp;
     try {
       // const initialLpWallet = client.open(await pool.getInitialLiquidityJettonWallet());
@@ -150,8 +158,8 @@ const handleProvideLiquidity = async (keyPair: KeyPair, contract: OpenedContract
     if (!poolExists) {
       console.log('You are providing initial liquidity to the pool so you will not be able to withdraw it');
     }
-    const token0AmountAnswer = await rl.question(`How many token0 do you want to provide? `);
-    const token1AmountAnswer = await rl.question(`How many token1 do you want to provide? `);
+    const token0AmountAnswer = await rl.question(`How many ${formatToken(poolParams.token0)} do you want to provide? `);
+    const token1AmountAnswer = await rl.question(`How many ${formatToken(poolParams.token1)} do you want to provide? `);
     if (isNaN(Number(token0AmountAnswer)) || isNaN(Number(token1AmountAnswer))) {
       console.log('Invalid input');
       return;
@@ -217,7 +225,7 @@ const handleProvideLiquidity = async (keyPair: KeyPair, contract: OpenedContract
     }
 
     const txsParams = await Promise.all([ firstTx, secondTx]);
-    console.log(`Depositing${poolExists ? '' : ' initial'} ${token0AmountAnswer} ${poolParams.token0} and ${token1AmountAnswer} ${poolParams.token1}`);
+    console.log(`Depositing${poolExists ? '' : ' initial'} ${token0AmountAnswer} ${formatToken(poolParams.token0)} and ${token1AmountAnswer} ${formatToken(poolParams.token1)}`);
         await contract.sendTransfer({
       seqno: await contract.getSeqno(),
       secretKey: keyPair.secretKey,
@@ -347,7 +355,10 @@ const run = async () => {
     if (jetton1 === '') {
       jetton1 = JETTON1;
     }
-    let decimals1 = 0;
+    if (jetton1 === "TON") {
+      jetton1 = PtonV1.address.toString();
+    }
+    let decimals1 = 9;
     if (jetton1 != PtonV1.address.toString()) {
       var decimals1Ans = await rl.question(`Enter decimals1: (default: 9) `);
       if (decimals1Ans === '') {
